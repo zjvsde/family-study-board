@@ -87,6 +87,8 @@ const CLOUD = {
 
 /* ================= 任务配置：想改任务就改这里 =================
    days: 1=周一 … 6=周六 0=周日
+   可选 from / to: 只在这段日期内出现，例如 from:'2026-11-21', to:'2026-12-26'
+   可选 skip: 这几天不出现，例如 skip:['2026-11-22','2026-11-29']
    kind: 'school' 校内  'daily' 每日打卡  'class' 上课  'extra' 拓展
 */
 const KIDS = [
@@ -108,6 +110,7 @@ const KIDS = [
     {id:'xh',   name:'星火打卡',            days:[6,0], kind:'extra'},
     {id:'lhg',  name:'联合国英语',          days:[6,0], kind:'extra'},
     {id:'jq',   name:'剑桥打卡',            days:[6,0], kind:'extra'},
+    {id:'ycsx', name:'优才数学课 17:30-19:30', days:[6], kind:'class', from:'2026-11-21', to:'2026-12-26'},
   ]},
   {id:'yb', name:'幺宝', grade:'四年级', tasks:[
     {id:'hw',   name:'学校作业（最优先）', days:[1,2,3,4,5], kind:'school'},
@@ -123,7 +126,8 @@ const KIDS = [
     {id:'yw',   name:'语文补习班',          days:[6], kind:'class'},
     {id:'zz',   name:'诸子精神学习',        days:[6], kind:'extra'},
     {id:'code', name:'编程学习',            days:[6], kind:'extra'},
-    {id:'sw',   name:'数学思维课',          days:[0], kind:'class'},
+    {id:'sw',   name:'数学思维课',          days:[0], kind:'class', skip:['2026-11-22','2026-11-29','2026-12-06','2026-12-13','2026-12-20','2026-12-27']},
+    {id:'sw6',  name:'数学思维课（调到周六）', days:[6], kind:'class', from:'2026-11-21', to:'2026-12-26'},
     {id:'ms',   name:'美术课',              days:[0], kind:'class'},
     {id:'xh',   name:'星火打卡',            days:[6,0], kind:'extra'},
     {id:'lhg',  name:'联合国英语',          days:[6,0], kind:'extra'},
@@ -273,8 +277,10 @@ function dayOf(st, dateStr, kid){
 function taskOf(st, ds, kid, tid){ const d=dayOf(st,ds,kid); return d.t[tid] ??= {}; }
 function tasksFor(kid, date){
   const k = KIDS.find(x=>x.id===kid);
-  const base = k.tasks.filter(t=>t.days.includes(date.getDay()));
-  const dd = S.days[fmt(date)]?.[kid];
+  const ds = fmt(date);
+  const base = k.tasks.filter(t=>t.days.includes(date.getDay())
+    && (!t.from || ds >= t.from) && (!t.to || ds <= t.to) && !(t.skip||[]).includes(ds));
+  const dd = S.days[ds]?.[kid];
   return base.concat((dd?.extra||[]).map(e=>({...e, kind:'extra', temp:true})));
 }
 function dayStat(kid, date){
