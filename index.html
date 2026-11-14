@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>小宝 & 幺宝 · 学习任务台</title>
+<style>
+  :root{
+    --bg:#f6f3ec; --card:#fff; --ink:#2b2a27; --muted:#8a857a; --line:#e6e0d4;
+    --xb:#3b7dd8; --yb:#e07a2f; --ok:#2e9d5b; --gold:#e3a81c;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,"PingFang SC","Hiragino Sans GB",sans-serif}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;flex-wrap:wrap}
+  h1{font-size:20px;margin:0}
+  .datebar{display:flex;align-items:center;gap:8px}
+  .datebar button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:15px}
+  .datebar .d{font-weight:600;min-width:150px;text-align:center}
+  nav{display:flex;gap:6px;padding:0 20px}
+  nav button{border:none;background:transparent;padding:8px 14px;border-radius:10px 10px 0 0;cursor:pointer;font-size:15px;color:var(--muted)}
+  nav button.on{background:#fff;color:var(--ink);font-weight:600}
+  main{background:#fff;margin:0 20px 20px;border-radius:0 12px 12px 12px;padding:16px}
+  .kids{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+  .kid{border:2px solid var(--line);border-radius:14px;padding:14px}
+  .kid.xb{border-color:color-mix(in srgb,var(--xb) 35%,#fff)}
+  .kid.yb{border-color:color-mix(in srgb,var(--yb) 35%,#fff)}
+  .kid h2{margin:0 0 4px;font-size:18px;display:flex;justify-content:space-between;align-items:center}
+  .xb h2 .n{color:var(--xb)} .yb h2 .n{color:var(--yb)}
+  .stars{font-size:15px;color:var(--gold);font-weight:700}
+  .prog{height:10px;background:#eee;border-radius:5px;overflow:hidden;margin:6px 0 10px}
+  .prog i{display:block;height:100%;background:var(--ok);transition:width .3s}
+  .task{display:flex;align-items:center;gap:8px;padding:8px 6px;border-bottom:1px dashed var(--line)}
+  .task:last-child{border-bottom:none}
+  .task .name{flex:1}
+  .task .tag{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:0 5px;margin-left:4px}
+  .task.done .name{color:var(--muted);text-decoration:line-through}
+  .chk{width:26px;height:26px;border-radius:7px;border:2px solid #bbb;background:#fff;cursor:pointer;font-size:16px;line-height:20px;padding:0}
+  .chk.on{background:var(--ok);border-color:var(--ok);color:#fff}
+  .pbtn{font-size:12px;border:1px solid var(--line);background:#fff;border-radius:6px;padding:2px 6px;cursor:pointer;color:var(--muted)}
+  .pbtn.on{background:#fff7df;border-color:var(--gold);color:#9a6b00;font-weight:600}
+  .pbtn:disabled{opacity:.35;cursor:not-allowed}
+  .sec{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+  .sec h3{font-size:14px;margin:0 0 6px;color:var(--muted);font-weight:600}
+  textarea,input[type=text],input[type=number]{width:100%;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:inherit;font-size:14px}
+  textarea{min-height:56px;resize:vertical}
+  .row{display:flex;gap:6px;align-items:center;margin-top:6px}
+  .row input{flex:1}
+  .btn{border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:14px;background:var(--ink);color:#fff}
+  .btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .hint{font-size:12px;color:var(--muted)}
+  .bonus{font-size:13px;margin-top:6px;color:#9a6b00}
+  .parentbar{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:8px 12px;background:#fff7df;border-radius:10px;font-size:14px;flex-wrap:wrap}
+  .parentbar.off{background:#f1f1f1}
+  table{border-collapse:collapse;width:100%;font-size:14px}
+  th,td{border:1px solid var(--line);padding:6px;text-align:center}
+  th{background:#faf8f3}
+  td.l{text-align:left}
+  .cell-full{background:#dff3e6} .cell-part{background:#fff4d6} .cell-none{background:#fbe3e0}
+  .shop{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+  .item{border:1px solid var(--line);border-radius:10px;padding:10px}
+  .item b{display:block}
+  .log{font-size:13px;color:var(--muted);max-height:200px;overflow:auto}
+  .help p{margin:6px 0}
+  .x{border:none;background:none;color:#c55;cursor:pointer;font-size:14px}
+</style>
+</head>
+<body>
+<header>
+  <h1>📚 小宝 & 幺宝 · 学习任务台</h1>
+  <div class="datebar">
+    <button id="prev">‹</button>
+    <span class="d" id="dateLabel"></span>
+    <button id="next">›</button>
+    <button id="today">今天</button>
+    <span id="sync" class="hint"></span>
+  </div>
+</header>
+<nav id="tabs"></nav>
+<main id="view"></main>
+
+<script>
+/* ================= 云端配置（Supabase 控制台 → Project Settings → API 里复制） ================= */
+const CLOUD = {
+  url: 'https://dpnupddenckhwgfhhaun.supabase.co',   // Project URL，例如 https://abcdefgh.supabase.co
+  key: 'sb_publishable_EpMa9wV8GGKWeUEpcsh6ww_uKmR8K2D',   // anon public key 或 publishable key
+};
+
+/* ================= 任务配置：想改任务就改这里 =================
+   days: 1=周一 … 6=周六 0=周日
+   kind: 'school' 校内  'daily' 每日打卡  'class' 上课  'extra' 拓展
+*/
+const KIDS = [
+  {id:'xb', name:'小宝', grade:'五年级', tasks:[
+    {id:'hw',   name:'学校作业（最优先）', days:[1,2,3,4,5], kind:'school'},
+    {id:'tuoci',name:'拓词英语打卡',       days:[0,1,2,3,4,5,6], kind:'daily'},
+    {id:'calc', name:'计算天天练',         days:[0,1,2,3,4,5,6], kind:'daily'},
+    {id:'polly',name:'Polly 外教课',       days:[1,4], kind:'class'},
+    {id:'ao1',  name:'奥数作业 1',         days:[1], kind:'extra'},
+    {id:'mz',   name:'名著 10 分钟动画',    days:[2], kind:'extra'},
+    {id:'ydbx', name:'大阅读伴学',          days:[3,4], kind:'extra'},
+    {id:'ao2',  name:'奥数作业 2',         days:[4], kind:'extra'},
+    {id:'ydk',  name:'大阅读课程及练习',    days:[5], kind:'class'},
+    {id:'en',   name:'英语补习班',          days:[6], kind:'class'},
+    {id:'yw',   name:'语文补习班',          days:[6], kind:'class'},
+    {id:'zz',   name:'诸子精神学习',        days:[6], kind:'extra'},
+    {id:'code', name:'编程学习',            days:[6], kind:'extra'},
+    {id:'aoke', name:'奥数课',              days:[0], kind:'class'},
+  ]},
+  {id:'yb', name:'幺宝', grade:'四年级', tasks:[
+    {id:'hw',   name:'学校作业（最优先）', days:[1,2,3,4,5], kind:'school'},
+    {id:'tuoci',name:'拓词英语打卡',       days:[0,1,2,3,4,5,6], kind:'daily'},
+    {id:'uxue', name:'外研 U 学',          days:[0,1,2,3,4,5,6], kind:'daily'},
+    {id:'calc', name:'计算天天练',         days:[0,1,2,3,4,5,6], kind:'daily'},
+    {id:'polly',name:'Polly 外教课',       days:[1,4], kind:'class'},
+    {id:'jq',   name:'剑桥打卡',            days:[1,3], kind:'extra'},
+    {id:'mz',   name:'名著 10 分钟动画',    days:[2], kind:'extra'},
+    {id:'ydbx', name:'大阅读伴学',          days:[3,4], kind:'extra'},
+    {id:'ydk',  name:'大阅读课程及练习',    days:[5], kind:'class'},
+    {id:'en',   name:'英语补习班',          days:[6], kind:'class'},
+    {id:'yw',   name:'语文补习班',          days:[6], kind:'class'},
+    {id:'zz',   name:'诸子精神学习',        days:[6], kind:'extra'},
+    {id:'code', name:'编程学习',            days:[6], kind:'extra'},
+    {id:'sw',   name:'数学思维课',          days:[0], kind:'class'},
+    {id:'ms',   name:'美术课',              days:[0], kind:'class'},
+  ]},
+];
+const KIND = {school:'校内', daily:'每日', class:'上课', extra:'拓展'};
+
+/* 星星规则 */
+const RULE = {
+  confirm: 1,   // 每项任务：孩子打勾 + 家长确认
+  quality: 1,   // 家长评"认真"额外
+  teach:   2,   // 今日"小老师"：讲给家长听 / 用出来
+  allDone: 3,   // 今日任务全部确认
+  family:  2,   // 两兄弟当天都全清，各得
+};
+const DEFAULT_SHOP = [
+  {name:'周末多 20 分钟屏幕时间', cost:15},
+  {name:'决定一次周末晚餐吃什么', cost:20},
+  {name:'和爸爸/妈妈单独约会半天', cost:40},
+  {name:'挑一本自己想要的书', cost:30},
+  {name:'免做一次家务（不含学习）', cost:25},
+];
+
+
+/* ================= 云端同步 =================
+   数据存在 Supabase；每次操作都“拉取最新 → 应用改动 → 带版本号保存”，
+   两个人同时操作也不会互相覆盖。 */
+const LOCAL_KEY = 'kids-study-board-v1';          // 本机缓存（也用于迁移旧数据）
+let PASS = localStorage.getItem('board-pass') || '';
+let PARENT = localStorage.getItem('board-parent') === '1';   // 家长模式只对本设备生效
+let VERSION = 0, READY = false;
+const blank = () => ({days:{}, redeemed:[], shop:DEFAULT_SHOP.map(x=>({...x})), pin:''});
+let S = blank();
+let pending = [], syncing = false, retryTimer = null, needRender = false;
+
+async function rpc(fn, body){
+  const h = {'Content-Type':'application/json', apikey:CLOUD.key};
+  if(CLOUD.key.startsWith('eyJ')) h.Authorization = 'Bearer '+CLOUD.key;
+  const r = await fetch(`${CLOUD.url.replace(/\/$/,'')}/rest/v1/rpc/${fn}`, {method:'POST', headers:h, body:JSON.stringify(body)});
+  const j = await r.json().catch(()=>null);
+  if(!r.ok){ const e = new Error(j?.message || ('HTTP '+r.status)); e.code = j?.code; throw e; }
+  return j;
+}
+async function pull(){
+  const j = await rpc('board_get', {p_pass:PASS});
+  VERSION = j.version;
+  return j.data;
+}
+function setStatus(t){ const el=document.getElementById('sync'); if(el) el.textContent=t; }
+function cacheLocal(){ localStorage.setItem(LOCAL_KEY+'-cloud', JSON.stringify(S)); }
+
+/* 所有修改都走 commit：fn 必须只依赖传入的 st，可以重复作用在最新数据上 */
+function commit(fn){
+  fn(S); cacheLocal(); render();
+  pending.push(fn); flush();
+}
+async function flush(){
+  if(syncing || !pending.length) return;
+  syncing = true; setStatus('⏳ 同步中…');
+  try{
+    while(pending.length){
+      const n = pending.length;
+      for(let tries=0;; tries++){
+        const remote = (await pull()) || blank();
+        pending.slice(0,n).forEach(f=>f(remote));
+        const res = await rpc('board_save', {p_pass:PASS, p_data:remote, p_version:VERSION});
+        if(res.ok){
+          VERSION = res.version; pending.splice(0,n);
+          S = remote; pending.forEach(f=>f(S));   // 期间又有新操作，先叠加在界面上
+          break;
+        }
+        if(tries > 8) throw new Error('多人同时修改，重试失败');
+      }
+    }
+    cacheLocal(); setStatus('✓ 已同步 '+new Date().toTimeString().slice(0,5)); render();
+  }catch(e){
+    if(e.code==='28P01') return logout('家庭密码已更改，请重新输入');
+    setStatus('⚠ 未同步（网络问题），稍后自动重试');
+    clearTimeout(retryTimer); retryTimer = setTimeout(flush, 10000);
+  }finally{ syncing = false; }
+}
+/* 定时拉取别人的改动 */
+async function refresh(){
+  if(!READY || syncing || pending.length || document.visibilityState!=='visible') return;
+  try{
+    const old = VERSION, data = await pull();
+    if(VERSION !== old && data){ S = data; cacheLocal(); render(); }
+    setStatus('✓ 已同步 '+new Date().toTimeString().slice(0,5));
+  }catch(e){
+    if(e.code==='28P01') return logout('家庭密码已更改，请重新输入');
+    setStatus('⚠ 连不上服务器，显示的是本机缓存');
+  }
+}
+setInterval(refresh, 15000);
+document.addEventListener('visibilitychange', refresh);
+
+async function start(){
+  if(!CLOUD.url || !CLOUD.key) return showMsg('还没有填写云端配置（文件顶部的 CLOUD）。');
+  if(!PASS) return showLogin();
+  setStatus('⏳ 连接中…');
+  const cached = localStorage.getItem(LOCAL_KEY+'-cloud');
+  if(cached){ S = JSON.parse(cached); READY = true; render(); }
+  try{
+    const data = await pull();
+    READY = true;
+    if(data){ S = data; cacheLocal(); render(); setStatus('✓ 已同步'); }
+    else{
+      // 云端是空的：第一次使用，把这台设备以前的本地数据搬上去
+      const old = JSON.parse(localStorage.getItem(LOCAL_KEY) || 'null');
+      const init = old ? {days:old.days||{}, redeemed:old.redeemed||[], shop:old.shop||blank().shop, pin:''} : blank();
+      commit(st=>{ Object.assign(st, init); });
+    }
+  }catch(e){
+    if(e.code==='28P01') return logout('家庭密码不对，请重新输入');
+    if(!READY) return showMsg('连不上服务器：'+e.message+'<br><button class="btn" onclick="location.reload()">重试</button>');
+    setStatus('⚠ 连不上服务器，显示的是本机缓存');
+  }
+}
+function logout(msg){
+  PASS=''; localStorage.removeItem('board-pass'); READY=false; showLogin(msg);
+}
+function showMsg(html){ $('#tabs').innerHTML=''; $('#view').innerHTML=`<p>${html}</p>`; }
+function showLogin(msg){
+  $('#tabs').innerHTML='';
+  $('#view').innerHTML = `<div style="max-width:320px;margin:40px auto;text-align:center">
+    <h3>🔒 请输入家庭密码</h3>${msg?`<p style="color:#c55">${msg}</p>`:''}
+    <div class="row"><input type="password" id="pw" placeholder="家庭密码"><button class="btn" id="pwok">进入</button></div>
+    <p class="hint">只需输入一次，这台设备会记住。</p></div>`;
+  const go = ()=>{ const v=$('#pw').value.trim(); if(!v) return; PASS=v; localStorage.setItem('board-pass',v); start(); };
+  $('#pwok').onclick = go; $('#pw').onkeydown = e=>{ if(e.key==='Enter') go(); };
+  $('#pw').focus();
+}
+
+let cur = new Date(); cur.setHours(0,0,0,0);
+let tab = 'today';
+const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const WK = ['周日','周一','周二','周三','周四','周五','周六'];
+
+function dayOf(st, dateStr, kid){
+  st.days ??= {};
+  st.days[dateStr] ??= {};
+  st.days[dateStr][kid] ??= {t:{}, teach:'', teachOk:false, extra:[]};
+  const d = st.days[dateStr][kid]; d.t ??= {}; d.extra ??= [];
+  return d;
+}
+function taskOf(st, ds, kid, tid){ const d=dayOf(st,ds,kid); return d.t[tid] ??= {}; }
+function tasksFor(kid, date){
+  const k = KIDS.find(x=>x.id===kid);
+  const base = k.tasks.filter(t=>t.days.includes(date.getDay()));
+  const dd = S.days[fmt(date)]?.[kid];
+  return base.concat((dd?.extra||[]).map(e=>({...e, kind:'extra', temp:true})));
+}
+function dayStat(kid, date){
+  const list = tasksFor(kid, date);
+  const dd = S.days[fmt(date)]?.[kid] || {t:{}};
+  let done=0, conf=0, stars=0;
+  list.forEach(t=>{
+    const r = dd.t?.[t.id] || {};
+    if(r.done) done++;
+    if(r.done && r.conf){ conf++; stars += RULE.confirm + (r.good?RULE.quality:0); }
+  });
+  const all = list.length>0 && conf===list.length;
+  if(all) stars += RULE.allDone;
+  if(dd.teachOk) stars += RULE.teach;
+  return {total:list.length, done, conf, stars, all};
+}
+function familyBonus(date){
+  return KIDS.every(k=>dayStat(k.id,date).all) ? RULE.family : 0;
+}
+function totalStars(kid){
+  let s = 0;
+  for(const ds of Object.keys(S.days)){
+    const d = new Date(ds+'T00:00:00');
+    s += dayStat(kid,d).stars + familyBonus(d);
+  }
+  s -= S.redeemed.filter(r=>r.kid===kid).reduce((a,r)=>a+r.cost,0);
+  return s;
+}
+
+/* ================= 渲染 ================= */
+const $ = s => document.querySelector(s);
+function render(){
+  if(!READY) return;
+  // 正在打字时不刷新界面，避免输入框被打断
+  const a = document.activeElement;
+  if(a && (a.tagName==='TEXTAREA' || (a.tagName==='INPUT' && a.type==='text'))){ needRender = true; return; }
+  needRender = false;
+  $('#dateLabel').textContent = `${fmt(cur)} ${WK[cur.getDay()]}`;
+  $('#tabs').innerHTML = [['today','今日任务'],['week','本周回顾'],['shop','星星兑换'],['help','使用说明']]
+    .map(([k,v])=>`<button class="${tab===k?'on':''}" data-tab="${k}">${v}</button>`).join('');
+  ({today:renderToday, week:renderWeek, shop:renderShop, help:renderHelp})[tab]();
+}
+document.addEventListener('focusout', ()=>setTimeout(()=>{ if(needRender) render(); }, 0));
+
+function parentBar(){
+  return `<div class="parentbar ${PARENT?'':'off'}">
+    ${PARENT ? '👨‍👩‍👦 家长模式：可以确认任务、评"认真"、确认小老师' : '🧒 孩子模式：自己打勾，等家长检查后得星'}
+    <button class="btn ghost" data-act="toggleParent">${PARENT?'切回孩子模式':'切到家长模式'}</button>
+  </div>`;
+}
+
+function renderToday(){
+  const ds = fmt(cur);
+  const fb = familyBonus(cur);
+  $('#view').innerHTML = parentBar() + `<div class="kids">` + KIDS.map(k=>{
+    const dd = S.days[ds]?.[k.id] || {t:{}, teach:'', teachOk:false, extra:[]};
+    const list = tasksFor(k.id,cur);
+    const st = dayStat(k.id,cur);
+    const pct = st.total ? Math.round(st.conf/st.total*100) : 0;
+    return `<section class="kid ${k.id}">
+      <h2><span><span class="n">${k.name}</span> <small class="hint">${k.grade}</small></span>
+          <span class="stars">⭐ 今日 ${st.stars + fb} · 余额 ${totalStars(k.id)}</span></h2>
+      <div class="hint">已确认 ${st.conf}/${st.total}（自己勾了 ${st.done}）</div>
+      <div class="prog"><i style="width:${pct}%"></i></div>
+      ${list.map(t=>{
+        const r = dd.t?.[t.id] || {};
+        return `<div class="task ${r.done?'done':''}">
+          <button class="chk ${r.done?'on':''}" data-act="done" data-k="${k.id}" data-t="${t.id}">${r.done?'✓':''}</button>
+          <span class="name">${esc(t.name)}<span class="tag">${KIND[t.kind]}</span></span>
+          <button class="pbtn ${r.conf?'on':''}" data-act="conf" data-k="${k.id}" data-t="${t.id}" ${(!PARENT||!r.done)?'disabled':''}>${r.conf?'已检查':'检查'}</button>
+          <button class="pbtn ${r.good?'on':''}" data-act="good" data-k="${k.id}" data-t="${t.id}" ${(!PARENT||!r.conf)?'disabled':''}>认真+1</button>
+          ${t.temp && PARENT ? `<button class="x" data-act="delExtra" data-k="${k.id}" data-t="${t.id}">✕</button>`:''}
+        </div>`;
+      }).join('') || '<p class="hint">今天没有安排任务，好好休息 🎈</p>'}
+      ${st.all ? `<div class="bonus">🎉 今日全清 +${RULE.allDone}${fb?`，兄弟同心 +${fb}`:''}</div>`:''}
+
+      <div class="sec">
+        <h3>🧑‍🏫 今日小老师（学 → 用）</h3>
+        <div class="hint">挑今天学到的一件事：讲给爸妈听 / 出一道题考家长 / 在生活里用一次。写一句话：</div>
+        <textarea data-act="teach" data-k="${k.id}" placeholder="例：我教妈妈用凑十法算 98+47；我用英语单词 borrow 造了句子…">${esc(dd.teach||'')}</textarea>
+        <div class="row">
+          <button class="pbtn ${dd.teachOk?'on':''}" data-act="teachOk" data-k="${k.id}" ${(!PARENT||!dd.teach)?'disabled':''}>${dd.teachOk?'✓ 讲得清楚 +'+RULE.teach:'家长确认讲清楚了'}</button>
+        </div>
+      </div>
+
+      ${PARENT ? `<div class="sec">
+        <h3>➕ 今天临时加一项</h3>
+        <div class="row"><input type="text" id="add-${k.id}" placeholder="例：订正数学错题"><button class="btn" data-act="addExtra" data-k="${k.id}">添加</button></div>
+      </div>`:''}
+    </section>`;
+  }).join('') + `</div>`;
+}
+
+function weekStart(d){ const x=new Date(d); const w=(x.getDay()+6)%7; x.setDate(x.getDate()-w); return x; }
+function renderWeek(){
+  const ws = weekStart(cur);
+  const days = [...Array(7)].map((_,i)=>{const d=new Date(ws); d.setDate(ws.getDate()+i); return d;});
+  let html = `<p class="hint">绿色=全部确认，黄色=部分完成，红色=有遗漏。周日晚上和孩子一起看这张表，聊 3 个问题：哪天最好？哪项最容易漏？下周怎么调整？</p>`;
+  for(const k of KIDS){
+    const rows = {};
+    days.forEach(d=>tasksFor(k.id,d).forEach(t=>{rows[t.id] ??= t.name;}));
+    html += `<h3>${k.name}</h3><table><tr><th>任务</th>${days.map(d=>`<th>${WK[d.getDay()]}<br><small>${d.getMonth()+1}/${d.getDate()}</small></th>`).join('')}<th>完成率</th></tr>`;
+    for(const [tid,name] of Object.entries(rows)){
+      let need=0, ok=0;
+      const cells = days.map(d=>{
+        const has = tasksFor(k.id,d).some(t=>t.id===tid);
+        if(!has) return '<td></td>';
+        need++;
+        const r = S.days[fmt(d)]?.[k.id]?.t?.[tid] || {};
+        if(r.conf) ok++;
+        const future = d > new Date();
+        return `<td class="${future?'':(r.conf?'cell-full':r.done?'cell-part':'cell-none')}">${r.conf?(r.good?'⭐':'✓'):r.done?'○':(future?'·':'✗')}</td>`;
+      }).join('');
+      html += `<tr><td class="l">${esc(name)}</td>${cells}<td>${need?Math.round(ok/need*100)+'%':''}</td></tr>`;
+    }
+    const teach = days.map(d=>S.days[fmt(d)]?.[k.id]).filter(x=>x?.teach).map(x=>x.teach);
+    html += `<tr><td class="l">小老师</td>${days.map(d=>{const x=S.days[fmt(d)]?.[k.id];return `<td class="${x?.teachOk?'cell-full':''}">${x?.teachOk?'🧑‍🏫':''}</td>`}).join('')}<td></td></tr></table>`;
+    if(teach.length) html += `<div class="log"><b>本周学以致用记录：</b><br>${teach.map(t=>'· '+esc(t)).join('<br>')}</div>`;
+    html += '<br>';
+  }
+  $('#view').innerHTML = html;
+}
+
+function renderShop(){
+  $('#view').innerHTML = parentBar() + `
+    <p class="hint">星星是"自己挣来的"，兑换权在孩子手里。建议多放"体验/特权"类奖励，少放买东西。</p>
+    <p>${KIDS.map(k=>`<b>${k.name}</b> 余额 ⭐ ${totalStars(k.id)}`).join('　　')}</p>
+    <div class="shop">${S.shop.map((it,i)=>`<div class="item">
+      <b>${esc(it.name)}</b><span class="stars">⭐ ${it.cost}</span>
+      <div class="row">${KIDS.map(k=>`<button class="btn ghost" data-act="redeem" data-k="${k.id}" data-i="${i}" ${(!PARENT||totalStars(k.id)<it.cost)?'disabled':''}>${k.name}兑换</button>`).join('')}
+      ${PARENT?`<button class="x" data-act="delShop" data-i="${i}">✕</button>`:''}</div>
+    </div>`).join('')}</div>
+    ${PARENT?`<div class="sec"><h3>添加奖励（最好让孩子自己提）</h3>
+      <div class="row"><input type="text" id="shopName" placeholder="奖励名称"><input type="number" id="shopCost" placeholder="星星数" style="max-width:100px"><button class="btn" data-act="addShop">添加</button></div></div>`:''}
+    <div class="sec"><h3>兑换记录</h3><div class="log">${S.redeemed.slice().reverse().map(r=>`${r.date} ${KIDS.find(k=>k.id===r.kid)?.name||r.kid} 兑换「${esc(r.item)}」-${r.cost}`).join('<br>')||'暂无'}</div></div>
+    ${PARENT?`<div class="sec"><h3>数据备份</h3>
+      <button class="btn ghost" data-act="export">导出备份</button>
+      <label class="btn ghost" style="display:inline-block">导入备份（会覆盖云端数据）<input type="file" id="imp" accept=".json" hidden></label>
+      <span class="hint">数据保存在云端，所有家人看到的是同一份。建议每月导出一次备份。</span></div>`:''}`;
+  const imp = $('#imp');
+  if(imp) imp.onchange = e=>{
+    const f=e.target.files[0]; if(!f) return;
+    f.text().then(t=>{
+      const d = JSON.parse(t);
+      if(!confirm('导入会覆盖所有家人看到的数据，确定吗？')) return;
+      const data = {days:d.days||{}, redeemed:d.redeemed||[], shop:d.shop||blank().shop, pin:d.pin??S.pin??''};
+      commit(st=>{ for(const k of Object.keys(st)) delete st[k]; Object.assign(st, JSON.parse(JSON.stringify(data))); });
+      alert('导入成功');
+    });
+  };
+}
+
+function renderHelp(){
+  $('#view').innerHTML = `<div class="help">
+  <h3>多人共用</h3>
+  <p>所有家人打开同一个网址、输入同一个家庭密码，看到的是同一份数据，约 15 秒自动刷新一次别人的改动。右上角显示同步状态。</p>
+  <p><b>家长模式只在当前设备生效</b>，进入需要家长口令（第一次进入时设置）。孩子用的设备保持孩子模式即可。</p>
+  <p><button class="btn ghost" data-act="logout">在这台设备上退出（清除家庭密码）</button></p>
+  <h3>每天怎么用（3 个时间点）</h3>
+  <p><b>放学后（2 分钟）</b>：孩子打开"今日任务"，自己看今天有什么，决定顺序。学校作业永远排第一。</p>
+  <p><b>做完一项</b>：孩子自己打勾 ✓。这一步只是"我说我做完了"。</p>
+  <p><b>睡前检查（10 分钟）</b>：切到家长模式，逐项点"检查"（看一眼作业/打卡截图），做得认真的再点"认真+1"。然后听孩子当一次"小老师"。</p>
+  <h3>星星规则</h3>
+  <p>每项任务家长确认 +${RULE.confirm}；认真 +${RULE.quality}；今日全清 +${RULE.allDone}；小老师 +${RULE.teach}；兄弟俩当天都全清，各 +${RULE.family}。</p>
+  <p>只有"家长确认"才得星——孩子自己打勾不算，这样避免"假打卡"。不扣星，只是没得到。</p>
+  <h3>周日家庭会（15 分钟）</h3>
+  <p>打开"本周回顾"，让孩子自己说：哪项最容易漏？为什么？下周想怎么调整？允许孩子提议改任务顺序和奖励。</p>
+  </div>`;
+}
+
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+/* ================= 交互 ================= */
+document.addEventListener('click', e=>{
+  const b = e.target.closest('[data-tab],[data-act]'); if(!b || b.disabled) return;
+  if(b.dataset.tab){ tab=b.dataset.tab; return render(); }
+  const {act,k,t,i} = b.dataset, ds = fmt(cur);
+  const r = (k && t) ? (S.days[ds]?.[k]?.t?.[t] || {}) : null;
+  switch(act){
+    case 'toggleParent': {
+      if(PARENT){ PARENT=false; }
+      else if(!S.pin){
+        const p = prompt('第一次进入家长模式，请设置家长口令（别让孩子知道）：'); if(!p) return;
+        commit(st=>{ st.pin=p; }); PARENT=true;
+      } else {
+        const p = prompt('请输入家长口令：'); if(p===null) return;
+        if(p!==S.pin) return alert('口令不对');
+        PARENT=true;
+      }
+      localStorage.setItem('board-parent', PARENT?'1':'0'); return render();
+    }
+    case 'done': { const v=!r.done; return commit(st=>{ const x=taskOf(st,ds,k,t); x.done=v; if(!v){x.conf=false;x.good=false;} }); }
+    case 'conf': { const v=!r.conf; return commit(st=>{ const x=taskOf(st,ds,k,t); x.conf=v; if(!v) x.good=false; }); }
+    case 'good': { const v=!r.good; return commit(st=>{ taskOf(st,ds,k,t).good=v; }); }
+    case 'teachOk': { const v=!(S.days[ds]?.[k]?.teachOk); return commit(st=>{ dayOf(st,ds,k).teachOk=v; }); }
+    case 'addExtra': {
+      const v=$('#add-'+k).value.trim(); if(!v) return;
+      const id='x'+Date.now();
+      $('#add-'+k).blur();
+      return commit(st=>{ const d=dayOf(st,ds,k); if(!d.extra.some(x=>x.id===id)) d.extra.push({id, name:v}); });
+    }
+    case 'delExtra': return commit(st=>{ const d=dayOf(st,ds,k); d.extra=d.extra.filter(x=>x.id!==t); delete d.t[t]; });
+    case 'redeem': {
+      const it=S.shop[i]; if(!confirm(`${KIDS.find(x=>x.id===k).name} 用 ${it.cost} 星兑换「${it.name}」？`)) return;
+      const rec={id:'r'+Date.now(), kid:k, item:it.name, cost:it.cost, date:fmt(new Date())};
+      return commit(st=>{ st.redeemed ??= []; if(!st.redeemed.some(x=>x.id===rec.id)) st.redeemed.push(rec); });
+    }
+    case 'addShop': {
+      const n=$('#shopName').value.trim(), c=+$('#shopCost').value; if(!n||!c) return;
+      $('#shopName').blur();
+      return commit(st=>{ st.shop ??= []; if(!st.shop.some(x=>x.name===n)) st.shop.push({name:n,cost:c}); });
+    }
+    case 'delShop': { const n=S.shop[i].name; return commit(st=>{ st.shop=(st.shop||[]).filter(x=>x.name!==n); }); }
+    case 'export': {
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,1)],{type:'application/json'}));
+      a.download=`学习任务台备份-${fmt(new Date())}.json`; a.click(); return;
+    }
+    case 'logout': if(confirm('退出后需要重新输入家庭密码，确定？')){ localStorage.removeItem(LOCAL_KEY+'-cloud'); logout(); } return;
+  }
+});
+/* 小老师输入：停笔 1 秒后自动保存 */
+let teachTimers = {};
+document.addEventListener('input', e=>{
+  if(e.target.dataset.act!=='teach') return;
+  const k=e.target.dataset.k, ds=fmt(cur), v=e.target.value;
+  dayOf(S,ds,k).teach = v;
+  const btn=e.target.parentElement.querySelector('[data-act=teachOk]'); if(btn) btn.disabled=!PARENT||!v;
+  clearTimeout(teachTimers[k]);
+  teachTimers[k] = setTimeout(()=>commit(st=>{ const d=dayOf(st,ds,k); d.teach=v; if(!v) d.teachOk=false; }), 1000);
+});
+$('#prev').onclick=()=>{cur.setDate(cur.getDate()-1);render();};
+$('#next').onclick=()=>{cur.setDate(cur.getDate()+1);render();};
+$('#today').onclick=()=>{cur=new Date();cur.setHours(0,0,0,0);render();};
+start();
+</script>
+</body>
+</html>
