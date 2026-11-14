@@ -90,55 +90,59 @@ const CLOUD = {
    可选 from / to: 只在这段日期内出现，例如 from:'2026-11-21', to:'2026-12-26'
    可选 skip: 这几天不出现，例如 skip:['2026-11-22','2026-11-29']
    kind: 'school' 校内  'daily' 每日打卡  'class' 上课  'extra' 拓展
+   subj: 'en' 英语  'cn' 语文  'math' 数学  'other' 其他（决定排序）
 */
 const KIDS = [
   {id:'xb', name:'小宝', grade:'五年级', tasks:[
     {id:'hw',   name:'学校作业（最优先）', days:[1,2,3,4,5], kind:'school'},
-    {id:'tuoci',name:'拓词英语打卡',       days:[0,1,2,3,4,5,6], kind:'daily'},
-    {id:'calc', name:'计算天天练',         days:[0,1,2,3,4,5,6], kind:'daily'},
-    {id:'polly',name:'Polly 外教课',       days:[1,4], kind:'class'},
-    {id:'ao1',  name:'奥数作业 1',         days:[1], kind:'extra'},
-    {id:'mz',   name:'名著 10 分钟动画',    days:[2], kind:'extra'},
-    {id:'ydbx', name:'大阅读伴学',          days:[3,4], kind:'extra'},
-    {id:'ao2',  name:'奥数作业 2',         days:[4], kind:'extra'},
-    {id:'ydk',  name:'大阅读课程及练习',    days:[5], kind:'class'},
-    {id:'en',   name:'英语补习班',          days:[6], kind:'class'},
-    {id:'yw',   name:'语文补习班',          days:[6], kind:'class'},
-    {id:'zz',   name:'诸子精神学习',        days:[6,0], kind:'extra'},
-    {id:'pjb',  name:'Polly 奖杯',          days:[0], kind:'extra'},
-    {id:'code', name:'编程学习',            days:[6], kind:'extra'},
-    {id:'aoke', name:'奥数课',              days:[0], kind:'class'},
-    {id:'xh',   name:'星火打卡',            days:[6,0], kind:'extra'},
-    {id:'xhyd', name:'星火阅读',            days:[6,0], kind:'extra'},
-    {id:'lhg',  name:'联合国英语',          days:[6,0], kind:'extra'},
-    {id:'jq',   name:'剑桥打卡',            days:[6,0], kind:'extra'},
-    {id:'ycsx', name:'优才数学课 17:30-19:30', days:[6], kind:'class', from:'2026-11-21', to:'2026-12-26'},
+    {id:'tuoci',name:'拓词英语打卡',       days:[0,1,2,3,4,5,6], subj:'en', kind:'daily'},
+    {id:'calc', name:'计算天天练',         days:[0,1,2,3,4,5,6], subj:'math', kind:'daily'},
+    {id:'polly',name:'Polly 外教课',       days:[1,4], subj:'en', kind:'class'},
+    {id:'ao1',  name:'奥数作业 1',         days:[1], subj:'math', kind:'extra'},
+    {id:'mz',   name:'名著 10 分钟动画',    days:[2], subj:'cn', kind:'extra'},
+    {id:'ydbx', name:'大阅读伴学',          days:[3,4], subj:'cn', kind:'extra'},
+    {id:'ao2',  name:'奥数作业 2',         days:[4], subj:'math', kind:'extra'},
+    {id:'ydk',  name:'大阅读课程及练习',    days:[5], subj:'cn', kind:'class'},
+    {id:'en',   name:'英语补习班',          days:[6], subj:'en', kind:'class'},
+    {id:'yw',   name:'语文补习班',          days:[6], subj:'cn', kind:'class'},
+    {id:'zz',   name:'诸子精神学习',        days:[6,0], subj:'cn', kind:'extra'},
+    {id:'pjb',  name:'Polly 奖杯',          days:[0], subj:'en', kind:'extra'},
+    {id:'code', name:'编程学习',            days:[6], subj:'other', kind:'extra'},
+    {id:'aoke', name:'奥数课',              days:[0], subj:'math', kind:'class'},
+    {id:'xh',   name:'星火打卡',            days:[6,0], subj:'cn', kind:'extra'},
+    {id:'xhyd', name:'星火阅读',            days:[6,0], subj:'cn', kind:'extra'},
+    {id:'lhg',  name:'联合国英语',          days:[6,0], subj:'en', kind:'extra'},
+    {id:'jq',   name:'剑桥打卡',            days:[6,0], subj:'en', kind:'extra'},
+    {id:'ycsx', name:'优才数学课 17:30-19:30', days:[6], subj:'math', kind:'class', from:'2026-11-21', to:'2026-12-26'},
   ]},
   {id:'yb', name:'幺宝', grade:'四年级', tasks:[
     {id:'hw',   name:'学校作业（最优先）', days:[1,2,3,4,5], kind:'school'},
-    {id:'tuoci',name:'拓词英语打卡',       days:[0,1,2,3,4,5,6], kind:'daily'},
-    {id:'uxue', name:'外研 U 学',          days:[0,1,2,3,4,5,6], kind:'daily'},
-    {id:'calc', name:'计算天天练',         days:[0,1,2,3,4,5,6], kind:'daily'},
-    {id:'polly',name:'Polly 外教课',       days:[1,4], kind:'class'},
-    {id:'jq',   name:'剑桥打卡',            days:[1,3], kind:'extra'},
-    {id:'mz',   name:'名著 10 分钟动画',    days:[2], kind:'extra'},
-    {id:'ydbx', name:'大阅读伴学',          days:[3,4], kind:'extra'},
-    {id:'ydk',  name:'大阅读课程及练习',    days:[5], kind:'class'},
-    {id:'en',   name:'英语补习班',          days:[6], kind:'class'},
-    {id:'yw',   name:'语文补习班',          days:[6], kind:'class'},
-    {id:'zz',   name:'诸子精神学习',        days:[6,0], kind:'extra'},
-    {id:'pjb',  name:'Polly 奖杯',          days:[0], kind:'extra'},
-    {id:'code', name:'编程学习',            days:[6], kind:'extra'},
-    {id:'sw',   name:'数学思维课',          days:[0], kind:'class', skip:['2026-11-22','2026-11-29','2026-12-06','2026-12-13','2026-12-20','2026-12-27']},
-    {id:'sw6',  name:'数学思维课（调到周六）', days:[6], kind:'class', from:'2026-11-21', to:'2026-12-26'},
-    {id:'ms',   name:'美术课',              days:[0], kind:'class'},
-    {id:'xh',   name:'星火打卡',            days:[6,0], kind:'extra'},
-    {id:'xhyd', name:'星火阅读',            days:[6,0], kind:'extra'},
-    {id:'lhg',  name:'联合国英语',          days:[6,0], kind:'extra'},
-    {id:'hb',   name:'外教绘本',            days:[6,0], kind:'extra'},
+    {id:'tuoci',name:'拓词英语打卡',       days:[0,1,2,3,4,5,6], subj:'en', kind:'daily'},
+    {id:'uxue', name:'外研 U 学',          days:[0,1,2,3,4,5,6], subj:'en', kind:'daily'},
+    {id:'calc', name:'计算天天练',         days:[0,1,2,3,4,5,6], subj:'math', kind:'daily'},
+    {id:'polly',name:'Polly 外教课',       days:[1,4], subj:'en', kind:'class'},
+    {id:'jq',   name:'剑桥打卡',            days:[1,3], subj:'en', kind:'extra'},
+    {id:'mz',   name:'名著 10 分钟动画',    days:[2], subj:'cn', kind:'extra'},
+    {id:'ydbx', name:'大阅读伴学',          days:[3,4], subj:'cn', kind:'extra'},
+    {id:'ydk',  name:'大阅读课程及练习',    days:[5], subj:'cn', kind:'class'},
+    {id:'en',   name:'英语补习班',          days:[6], subj:'en', kind:'class'},
+    {id:'yw',   name:'语文补习班',          days:[6], subj:'cn', kind:'class'},
+    {id:'zz',   name:'诸子精神学习',        days:[6,0], subj:'cn', kind:'extra'},
+    {id:'pjb',  name:'Polly 奖杯',          days:[0], subj:'en', kind:'extra'},
+    {id:'code', name:'编程学习',            days:[6], subj:'other', kind:'extra'},
+    {id:'sw',   name:'数学思维课',          days:[0], subj:'math', kind:'class', skip:['2026-11-22','2026-11-29','2026-12-06','2026-12-13','2026-12-20','2026-12-27']},
+    {id:'sw6',  name:'数学思维课（调到周六）', days:[6], subj:'math', kind:'class', from:'2026-11-21', to:'2026-12-26'},
+    {id:'ms',   name:'美术课',              days:[0], subj:'other', kind:'class'},
+    {id:'xh',   name:'星火打卡',            days:[6,0], subj:'cn', kind:'extra'},
+    {id:'xhyd', name:'星火阅读',            days:[6,0], subj:'cn', kind:'extra'},
+    {id:'lhg',  name:'联合国英语',          days:[6,0], subj:'en', kind:'extra'},
+    {id:'hb',   name:'外教绘本',            days:[6,0], subj:'en', kind:'extra'},
   ]},
 ];
 const KIND = {school:'校内', daily:'每日', class:'上课', extra:'拓展'};
+/* 显示顺序：学校作业 → 上课 → 其他事项（英语 → 语文 → 数学 → 其他），同组内按上面列表的先后 */
+const SUBJ_ORDER = {en:1, cn:2, math:3, other:4};
+const taskRank = t => (t.kind==='school' ? 0 : t.kind==='class' ? 100 : 200) + (SUBJ_ORDER[t.subj] ?? 9);
 
 /* 星星规则 */
 const RULE = {
@@ -285,6 +289,7 @@ function tasksFor(kid, date){
   const base = k.tasks.filter(t=>t.days.includes(date.getDay())
     && (!t.from || ds >= t.from) && (!t.to || ds <= t.to) && !(t.skip||[]).includes(ds));
   const dd = S.days[ds]?.[kid];
+  base.sort((a,b)=>taskRank(a)-taskRank(b));
   return base.concat((dd?.extra||[]).map(e=>({...e, kind:'extra', temp:true})));
 }
 function dayStat(kid, date){
